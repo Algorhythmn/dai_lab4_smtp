@@ -24,7 +24,7 @@ public class Client {
         return line;
     }
 
-    
+
     public static void main(String[] args) {
         new Client().connect();
     }
