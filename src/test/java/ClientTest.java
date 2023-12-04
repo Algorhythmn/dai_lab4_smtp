@@ -14,12 +14,28 @@ public class ClientTest {
         try (Socket s = new Socket("localhost", 1025);
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), UTF_8));
              BufferedReader in = new BufferedReader((new InputStreamReader(s.getInputStream(), UTF_8)))) {
-            result = new Client().sessionInitiation(in,out);
+            result = new Client().sessionInitiation(out, in);
         } catch (IOException e) {
             System.err.println("Client Error: " + e);
         }
 
         assertEquals("220 e3be39763734 ESMTP", result);
 
+    }
+
+    @Test
+    public void clientInitiation() {
+        Client client = new Client();
+        String result = null;
+        try (Socket s = new Socket("localhost", 1025);
+             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), UTF_8));
+             BufferedReader in = new BufferedReader((new InputStreamReader(s.getInputStream(), UTF_8)))) {
+            result = client.sessionInitiation(out, in);
+            result = client.clientInitiation(out, in);
+        } catch (IOException e) {
+            System.err.println("Client Error: " + e);
+        }
+
+        assertEquals("250 SMTPUTF8", result);
     }
 }
