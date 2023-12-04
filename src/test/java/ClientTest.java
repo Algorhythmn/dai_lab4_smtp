@@ -14,7 +14,7 @@ public class ClientTest {
         try (Socket s = new Socket("localhost", 1025);
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), UTF_8));
              BufferedReader in = new BufferedReader((new InputStreamReader(s.getInputStream(), UTF_8)))) {
-            result = new Client().initialConnection(out,in);
+            result = new Client().initialConnection(in);
         } catch (IOException e) {
             System.err.println("Client Error: " + e);
         }
