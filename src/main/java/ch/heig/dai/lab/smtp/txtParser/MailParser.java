@@ -6,7 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 //TODO - Put the validation process here
 public class MailParser {
-    private ArrayList<String> getMails(){
+    public ArrayList<String> parseMails(){
         ArrayList<String> mailList = new ArrayList<>();
         try (BufferedReader in = new BufferedReader(new FileReader("config/mail.txt", UTF_8))){
             String line;
@@ -20,6 +20,6 @@ public class MailParser {
     }
 
     public static void main(String[] args) {
-        System.out.println(new MailParser().getMails());
+        System.out.println(new MailParser().parseMails());
     }
 }

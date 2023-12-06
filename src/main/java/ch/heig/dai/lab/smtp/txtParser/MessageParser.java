@@ -7,7 +7,7 @@ public class MessageParser {
 
     private ArrayList<String> subjectList = new ArrayList<>();
     private ArrayList<String> bodyList = new ArrayList<>();
-    private void parseMessages() {
+    public void parseMessages() {
         try(BufferedReader in = new BufferedReader(new FileReader("config/messages.txt", UTF_8))){
             String line;
             while ((line = in.readLine()) != null && !line.isEmpty()) {
@@ -16,10 +16,11 @@ public class MessageParser {
                     subjectList.add(in.readLine());
                 } else if (line.equals("BODY")) {
                     while ((line = in.readLine()) != null && !line.isEmpty()) {
-                        body.append(line).append("\n");
+                        if (!line.equals("\n"))
+                            body.append(line).append("\r\n");
                     }
+                    bodyList.add(body.toString());
                 }
-                bodyList.add(body.toString());
             }
         } catch (IOException e) {
             System.err.println("Error parsing messages.txt file: " + e);
