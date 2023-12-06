@@ -3,6 +3,7 @@ package ch.heig.dai.lab.smtp.client;
 import java.io.*;
 import java.net.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import ch.heig.dai.lab.smtp.txtParser.MailParser;
 public class Client {
 
     private final static String END_CONNECTION = "221 Bye";
@@ -59,7 +60,7 @@ public class Client {
         out.write("QUIT\r\n");
         out.flush();
         //TODO: Make it a function
-        while ((line = in.readLine()) != null && !line.equals(ACCEPTED_REQUEST)) {}
+        while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
         return line;
     }
 
@@ -74,21 +75,25 @@ public class Client {
         out.write("MAIL FROM:" + mailAddressFormat(mail));
         out.flush();
         //TODO: Make it a function
-        while ((line = in.readLine()) != null && !line.equals(ACCEPTED_REQUEST)) {}
+        while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
 
         //Setting hidden recipients - FOllow RFC
-        String[] mailList = new String[5];
-        mailList[0] = "thisIS@hotmalr.vf";
-        mailList[1] = "日本人oliverzpua@h0tmal.com";
-        mailList[2] = "tecno#roj@drmarcomendozacorbetto.com";
-        mailList[3] = "lexoair#!$_&-@meslivresienetre.com";
-        mailList[4] = "oui.sza@boranora.com";
+
         for (int i = 0; i < 5; i++) {
-            out.write("RCPT TO:" + mailAddressFormat(mailList[i]));
+            out.write("RCPT TO:" + mailAddressFormat(""));
             out.flush();
             //TODO: Make it a function
-            while ((line = in.readLine()) != null && !line.equals(ACCEPTED_REQUEST)) {}
+            while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
         }
+        return true;
+    }
+
+    public boolean writeBodyMessages(BufferedWriter out, BufferedReader in) throws IOException {
+        String line;
+        out.write("DATA");
+        out.flush();
+        //TODO: Make it a function (parameters in accepted request code)
+        while ((line = in.readLine()) != null && !line.equals("354 ")) {}
 
         return false;
     }
