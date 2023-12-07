@@ -48,3 +48,29 @@ java -jar target/dai_lab4_smtp-1.0-SNAPSHOT.jar
 
 You will be prompted to enter the desired number of group you wish to send emails to. Note that the each groups needs at minimum 2 addresses and a maximum of 5 addresses. If the number of groups is not appropriated, you will be prompted again.
 After entering a valid number of group. Your email will be sent and you can verify it on the mock mail server !
+
+## Implementation's description
+The Main class use 3 primordial classes to do the SMTP transaction. The Main class itself will only be in charge of fetching
+a valid user input for the number of desired group and will process to initialized all the other classes below.
+
+### `MailParser.java`
+This is the class that fetch all email addresses from the `mail.txt` file.
+Mail are only added when they are in the correct formatting and syntax explained above.
+The syntax is verified via regex pattern matching.
+
+### `MessageParser.java`
+This is the class that fetch the subject and body message and store them in its attribute
+in ArrayLists. 
+
+### `Client.java`
+This is the main class that communicate with the SMTP mail server. 
+Port and address are hard-coded in attribute. Also all messages that the mock mail server respond withare also stored
+as constant inside. If another mail server, address or port are used, we have to change it directly in the code. 
+
+It is also the job of the Client to subdivise the groups into subgroups and send a random email text from the list provided.
+The subdivision is not random: if a `N` email are provided and we desire `x` groups assuming that each groups will at the very least
+have 2 or at most 5 members. The the first `N/x `(rounded to the top) members of the email list will be a subgroup, and the following, until the entire email list is exhausted.
+
+The chosen encoding when conversing with the mail server is hard-coded to be UTF-8.
+
+
