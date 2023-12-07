@@ -33,17 +33,19 @@ public class Client {
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), UTF_8));
         BufferedReader in = new BufferedReader((new InputStreamReader(s.getInputStream(), UTF_8)))) {
             sessionInitiation(in);
-            clientInitiation(out);
+            clientInitiation(out, in);
             int random;
             //Pass the correct group and all
-            for(int i = 0; i < nbrOfGroup; i++) {
-                ArrayList<String> subGroup = new ArrayList<>();
-                for (int idx = 0; idx < (int) (idx + Math.ceil(mailList.size()/nbrOfGroup)) && idx < mailList.size(); idx++) {
+            ArrayList<String> subGroup = new ArrayList<>();
+            for(int i = 0, idx = 0; i < nbrOfGroup; i++) {
+                int maxSubGroup = (int) (idx + Math.ceil(mailList.size()/nbrOfGroup));
+                for (; idx < maxSubGroup && idx < mailList.size(); idx++) {
                     subGroup.add(mailList.get(idx));
                 }
                 setSenderAndRecipients(out, in, subGroup);
                 random = ThreadLocalRandom.current().nextInt(bodyList.size());
-                setMsgBody(out,in,mailList, subjectList.get(random), bodyList.get(random));
+                setMsgBody(out,in,subGroup, subjectList.get(random), bodyList.get(random));
+                subGroup = new ArrayList<>();
             }
             endConnection(out,in);
         } catch (IOException e) {
@@ -77,11 +79,13 @@ public class Client {
      * Send the EHLO mesage to the server
      *
      * @param out BufferedWriter to send message to the server
+     * @param in
      * @throws IOException
      */
-    private void clientInitiation(BufferedWriter out) throws IOException {
+    private void clientInitiation(BufferedWriter out, BufferedReader in) throws IOException {
         out.write(EHLO + CLIENT_IDENTITY + CRLF);
         out.flush();
+        consumeServerText(in, ACCEPTED_REQUEST);
     }
 
     /**
