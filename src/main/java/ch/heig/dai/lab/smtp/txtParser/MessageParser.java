@@ -7,6 +7,10 @@ public class MessageParser {
 
     private ArrayList<String> subjectList = new ArrayList<>();
     private ArrayList<String> bodyList = new ArrayList<>();
+
+    /**
+     * Parses the subject and body message from the messages.txt config file
+     */
     public void parseMessages() {
         try(BufferedReader in = new BufferedReader(new FileReader("config/messages.txt", UTF_8))){
             String line;
@@ -33,12 +37,5 @@ public class MessageParser {
 
     public ArrayList<String> getSubjectList() {
         return new ArrayList<>(subjectList);
-    }
-
-    public static void main(String[] args) {
-        MessageParser test = new MessageParser();
-        test.parseMessages();
-        System.out.println(test.getSubjectList());
-        System.out.println(test.getBodyList());
     }
 }

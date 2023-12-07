@@ -10,13 +10,21 @@ public class Client {
 
     private final static String END_CONNECTION = "221 Bye";
     private final static String EHLO = "EHLO ";
-    private final static String CLIENT_IDENDITY = "heig-vd.ch";
+    private final static String CLIENT_IDENTITY = "heig-vd.ch";
     private final static String ADDR = "localhost";
     private final static String ACCEPTED_REQUEST = "250 ";
     private final static String START_DATA = "354";
     private final static String CRLF = "\r\n";
     private final static int PORT = 1025;
 
+    /**
+     * The full SMTP transaction to send email to all groups
+     *
+     * @param nbrOfGroup Desired number of group
+     * @param mailList All mails that will be divided in n groups
+     * @param subjectList All available subjects for email
+     * @param bodyList All available body message for email
+     */
     public void connect(int nbrOfGroup,
                         ArrayList<String> mailList,
                         ArrayList<String> subjectList,
@@ -24,8 +32,8 @@ public class Client {
         try (Socket s = new Socket(ADDR, PORT);
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), UTF_8));
         BufferedReader in = new BufferedReader((new InputStreamReader(s.getInputStream(), UTF_8)))) {
-            sessionInitiation(out, in);
-            clientInitiation(out, in);
+            sessionInitiation(in);
+            clientInitiation(out);
             int random;
             //Pass the correct group and all
             for(int i = 0; i < nbrOfGroup; i++) {
@@ -43,81 +51,107 @@ public class Client {
         }
     }
 
-    private void sessionInitiation(BufferedWriter out, BufferedReader in) throws IOException {
-        String line;
-        while ((line = in.readLine()) != null && !line.contains("220")) {}
-
-        //In case there is an error here, the client should quit the connection
-        if (line.contains("Error")) {
-            endConnection(out, in);
-        }
+    /**
+     * After sending EHLO, for consuming all supported protocol by the mail server
+     *
+     * @param in Input from Server
+     * @throws IOException
+     */
+    private void sessionInitiation(BufferedReader in) throws IOException {
+        consumeServerText(in,"220");
     }
 
-    private void clientInitiation(BufferedWriter out, BufferedReader in) throws IOException {
+    /**
+     * Consume all text sent by server depending of ending of messages
+     *
+     * @param in Input from mail server
+     * @param endText text that announce that the server will not send anymore message to the client
+     * @throws IOException
+     */
+    private void consumeServerText(BufferedReader in, String endText) throws IOException {
         String line;
-        out.write(EHLO + CLIENT_IDENDITY + CRLF);
+        while((line = in.readLine()) != null && !line.contains(endText)) {}
+    }
+
+    /**
+     * Send the EHLO mesage to the server
+     *
+     * @param out BufferedWriter to send message to the server
+     * @throws IOException
+     */
+    private void clientInitiation(BufferedWriter out) throws IOException {
+        out.write(EHLO + CLIENT_IDENTITY + CRLF);
         out.flush();
-
-        //TODO: Make it a function
-        while((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {
-            //To deal with error that could happens in client initiation phase
-            if (line.contains("Error")) {
-                endConnection(out, in);
-                break;
-            }
-        }
     }
 
+    /**
+     * Put an end to the conncetion to the server by sending the QUIT message
+     *
+     * @param out BufferedWriter to send message to the server
+     * @param in Input from mail server
+     * @throws IOException
+     */
     private void endConnection(BufferedWriter out, BufferedReader in) throws IOException {
-        String line;
         out.write("QUIT" + CRLF);
         out.flush();
-        //TODO: Make it a function
-        while ((line = in.readLine()) != null && !line.contains(END_CONNECTION)) {}
+        consumeServerText(in, END_CONNECTION);
         System.out.println("Mail Sent");
     }
 
+    /**
+     * Correctly format mail address for MAIL FROM and RCPT TO message
+     *
+     * @param mail mail address to format
+     * @return formatted mail address
+     */
     private String mailAddressFormat(String mail) {
         return "<" + mail.toLowerCase() + ">" + CRLF;
     }
 
+
     /**
-     * Send the sender and recipient to the mail server
+     * Send the first member of grouèp as the sender and the rest as recipients of the mail
      *
-     * @param out
-     * @param in
-     * @param mailList
+     * @param out BufferedWriter to send message to the server
+     * @param in BufferedWriter to send message to the server
+     * @param mailList Subgroup of original mail list
      * @throws IOException
      */
     private void setSenderAndRecipients(BufferedWriter out,
                                        BufferedReader in,
                                        ArrayList<String> mailList) throws IOException {
-        String line;
         //Setting hidden sender
         out.write("MAIL FROM:" + mailAddressFormat(mailList.getFirst()));
         out.flush();
-        //TODO: Make it a function
-        while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
+        consumeServerText(in, ACCEPTED_REQUEST);
 
         //Setting hidden recipients
         for (int i = 1; i < mailList.size(); i++) {
             out.write("RCPT TO:" + mailAddressFormat(mailList.get(i)));
             out.flush();
-            //TODO: Make it a function
-            while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
+            consumeServerText(in, ACCEPTED_REQUEST);
         }
     }
 
+    /**
+     * Send the body of the  email
+     *
+     * @param out BufferedWriter to send message to the server
+     * @param in BufferedWriter to send message to the server
+     * @param mailList Subgroup of original mail list
+     * @param subject Subject of the email
+     * @param body Body of the email
+     * @throws IOException
+     */
     private void setMsgBody(BufferedWriter out,
                            BufferedReader in,
                            ArrayList<String> mailList,
                            String subject,
                            String body) throws IOException {
-        String line;
         out.write("DATA" + CRLF);
         out.flush();
-        //TODO - Make it a function consume text until ...
-        while ((line = in.readLine()) != null && !line.contains(START_DATA)) {}
+        consumeServerText(in, START_DATA);
+
 
         //Setting Body encoding to UTF-8
         out.write("Content-Type: text/plain; charset=utf-8" + CRLF);
@@ -149,9 +183,15 @@ public class Client {
         //Ending message
         out.write("." + CRLF);
         out.flush();
-        while ((line = in.readLine()) != null && !line.contains(ACCEPTED_REQUEST)) {}
+        consumeServerText(in, ACCEPTED_REQUEST);
         }
 
+    /**
+     * Wrapper fo UTF-8 encoding on the subject for the mail server
+     *
+     * @param text text to be wrapped
+     * @return wrapped text
+     */
     private String utf8Formatting(String text) {
         return "=?utf-8?Q?" + text + "?=";
     }
